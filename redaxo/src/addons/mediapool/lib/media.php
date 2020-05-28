@@ -235,6 +235,8 @@ class rex_media
     }
 
     /**
+     * @param array $params
+     *
      * @return string
      */
     public function toImage(array $params = [])
