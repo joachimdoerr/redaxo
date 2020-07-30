@@ -101,7 +101,8 @@ class rex_sql_table
                 $type,
                 'YES' === $column['null'],
                 $column['default'],
-                $column['extra'] ?: null
+                $column['extra'] ?: null,
+                $column['comment'] ?: null
             );
 
             $this->columnsExisting[$column['name']] = $column['name'];
@@ -142,7 +143,7 @@ class rex_sql_table
         $foreignKeyParts = $this->sql->getArray('
             SELECT c.CONSTRAINT_NAME, c.REFERENCED_TABLE_NAME, c.UPDATE_RULE, c.DELETE_RULE, k.COLUMN_NAME, k.REFERENCED_COLUMN_NAME
             FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS c
-            LEFT JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE k ON c.CONSTRAINT_NAME = k.CONSTRAINT_NAME
+            INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE k ON c.CONSTRAINT_NAME = k.CONSTRAINT_NAME
             WHERE c.CONSTRAINT_SCHEMA = DATABASE() AND c.TABLE_NAME = ?', [$name]);
         $foreignKeys = [];
         foreach ($foreignKeyParts as $part) {
@@ -918,13 +919,19 @@ class rex_sql_table
             $default = 'DEFAULT '.$this->sql->escape($column->getDefault());
         }
 
+        $comment = $column->getComment();
+        if (null !== $comment && '' !== $comment) {
+            $comment = 'COMMENT '. $this->sql->escape($comment);
+        }
+
         return sprintf(
-            '%s %s %s %s %s',
+            '%s %s %s %s %s %s',
             $this->sql->escapeIdentifier($column->getName()),
             $column->getType(),
             $default,
             $column->isNullable() ? '' : 'NOT NULL',
-            $column->getExtra()
+            $column->getExtra(),
+            $comment
         );
     }
 
